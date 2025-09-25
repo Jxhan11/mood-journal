@@ -8,6 +8,7 @@ import {
   Dimensions,
   Alert,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,7 +23,6 @@ import {
 
 const { width } = Dimensions.get("window");
 
-
 export default function InsightsScreen() {
   const [selectedPeriod, setSelectedPeriod] = useState<
     "week" | "month" | "year"
@@ -30,6 +30,7 @@ export default function InsightsScreen() {
   const [stats, setStats] = useState<any>(null);
   const [weeklySummary, setWeeklySummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const periods = [
     { value: "week", label: "This Week" },
@@ -53,6 +54,12 @@ export default function InsightsScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchInsights();
+    setRefreshing(false);
   };
 
   useEffect(() => {
@@ -171,6 +178,14 @@ export default function InsightsScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.primary}
+            colors={[COLORS.primary]}
+          />
+        }
       >
         {/* Period Selector */}
         <View style={styles.periodSelector}>

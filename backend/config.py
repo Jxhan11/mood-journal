@@ -30,7 +30,7 @@ class DevelopmentConfig(Config):
     TESTING=False
 
     MONGODB_URI = os.environ.get('MONGODB_URI')
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=60)
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=30)
 
 
 class ProductionConfig(Config):

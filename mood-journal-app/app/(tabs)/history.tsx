@@ -235,32 +235,49 @@ export default function HistoryScreen() {
           style={styles.entriesList}
           contentContainerStyle={styles.entriesContent}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={COLORS.primary}
+              colors={[COLORS.primary]}
+            />
           }
           showsVerticalScrollIndicator={false}
         />
       ) : (
-        <View style={styles.emptyState}>
-          <Ionicons
-            name="journal-outline"
-            size={64}
-            color={COLORS.textTertiary}
-          />
-          <Text style={styles.emptyTitle}>No entries found</Text>
-          <Text style={styles.emptySubtitle}>
-            {filter === "all"
-              ? "Start tracking your mood by creating your first entry"
-              : `No ${filter} mood entries found. Try a different filter.`}
-          </Text>
-          {filter === "all" && (
-            <TouchableOpacity
-              style={styles.createButton}
-              onPress={() => router.push("/entry/create")}
-            >
-              <Text style={styles.createButtonText}>Create Entry</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+        <ScrollView
+          contentContainerStyle={styles.emptyStateContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={COLORS.primary}
+              colors={[COLORS.primary]}
+            />
+          }
+        >
+          <View style={styles.emptyState}>
+            <Ionicons
+              name="journal-outline"
+              size={64}
+              color={COLORS.textTertiary}
+            />
+            <Text style={styles.emptyTitle}>No entries found</Text>
+            <Text style={styles.emptySubtitle}>
+              {filter === "all"
+                ? "Start tracking your mood by creating your first entry"
+                : `No ${filter} mood entries found. Try a different filter.`}
+            </Text>
+            {filter === "all" && (
+              <TouchableOpacity
+                style={styles.createButton}
+                onPress={() => router.push("/entry/create")}
+              >
+                <Text style={styles.createButtonText}>Create Entry</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </ScrollView>
       )}
     </SafeAreaView>
   );
@@ -413,8 +430,13 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     textTransform: "capitalize",
   },
-  emptyState: {
+  emptyStateContainer: {
     flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    minHeight: 400, // Ensure enough height for pull-to-refresh
+  },
+  emptyState: {
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: SPACING.xl,

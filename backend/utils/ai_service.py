@@ -159,6 +159,7 @@ Remember: You're providing supportive insights, not therapy or medical advice.""
             raise AIServiceError("Failed to generate weekly summary")
 
 
+
     def _build_weekly_prompt(self, mood_data):
         """Build prompt for weekly mood summary"""
         
