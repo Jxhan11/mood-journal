@@ -38,6 +38,13 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      "expo-audio",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow Mood Journal to access your microphone."
+        }
       ]
     ],
     "experiments": {

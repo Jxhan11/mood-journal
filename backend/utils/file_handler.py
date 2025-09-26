@@ -17,7 +17,7 @@ class AudioFileHandler:
 
     @staticmethod
     def allowed_file(filename):
-        return '.' in filename and filename.rsplit('.',1).lower()[1] in AudioFileHandler.ALLOWED_EXTENSIONS
+        return '.' in filename and filename.rsplit('.',1)[1].lower() in AudioFileHandler.ALLOWED_EXTENSIONS
 
     @staticmethod
     def validate_audio_file(file):
@@ -32,9 +32,9 @@ class AudioFileHandler:
         file_size = file.tell()
         file.seek(0)
 
-        max_size = current_app.config.get['MAX_AUDIO_SIZE',16*1024*1024]#16 mb default
-        if file_size>max_size:
-            max_mb = max_size/1024*1024
+        max_size = current_app.config.get('MAX_AUDIO_SIZE', 16*1024*1024)  # 16 mb default
+        if file_size > max_size:
+            max_mb = max_size / (1024 * 1024)
             raise FileUploadError(f"File size exceeds the maximum allowed size of {max_mb:.1f} MB")
         
         try:

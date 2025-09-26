@@ -29,6 +29,8 @@ export interface MoodEntry {
   ai_insight?: string;
   ai_processed: boolean;
   ai_processing_failed: boolean;
+  ai_error_message?: string;
+  ai_processed_at?: string;
   entry_date: string;
   created_at: string;
   updated_at: string;

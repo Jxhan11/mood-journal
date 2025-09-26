@@ -36,13 +36,14 @@ def create_entry():
         }),400
 
     try:
-        entry_date = data['entry_date'].date()
-        existing_entry = MoodEntry.objects(user=user,entry_date=entry_date).first()
-        if existing_entry:
-            return jsonify({
-                'error':'Entry already exists',
-                'message':'An entry for this date already exists'
-            }),400
+        entry_date = data['entry_date']
+        current_app.logger.info(f"Entry date: {entry_date}")
+        # existing_entry = MoodEntry.objects(user=user,entry_date=entry_date).first()
+        # if existing_entry:
+        #     return jsonify({
+        #         'error':'Entry already exists',
+        #         'message':'An entry for this date already exists'
+        #     }),400
 
         from models.mood_model import Mood
         
@@ -62,6 +63,11 @@ def create_entry():
         )
         entry.save()
         current_app.logger.info(f"New entry created: {entry.id}")
+        
+        # Queue background insight generation
+        from utils.insight_processor import queue_insight_generation
+        queue_insight_generation(entry.id)
+        
         return jsonify({
             'message':'Entry created successfully',
             'entry':entry.to_dict()

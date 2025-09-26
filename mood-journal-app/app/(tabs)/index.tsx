@@ -302,15 +302,16 @@ const styles = StyleSheet.create({
   },
   moodOption: {
     alignItems: "center",
-    padding: SPACING.base,
+    padding: 10,
     borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 2,
+    borderWidth: 1,
     backgroundColor: COLORS.white,
-    minWidth: 80,
-    ...SHADOWS.sm,
+    minWidth: 90,
+    // maxWidth: 30,
+    // ...SHADOWS.sm,
   },
   moodEmoji: {
-    fontSize: 32,
+    fontSize: 22,
     marginBottom: SPACING.xs,
   },
   moodLabel: {

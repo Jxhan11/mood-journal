@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { Audio } from "expo-av";
 import { useStore } from "../../store/useStore";
 import { apiService } from "../../service/api";
 import {
@@ -57,6 +58,10 @@ export default function CreateEntryScreen() {
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioUri, setAudioUri] = useState<string | null>(null);
+  const [audioLength, setAudioLength] = useState(0);
 
   const selectedMoodData = moodOptions.find(
     (m) => m.emotion === formData.selectedEmotion
@@ -71,6 +76,68 @@ export default function CreateEntryScreen() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const startRecording = async () => {
+    try {
+      // Request permissions
+      const permission = await Audio.requestPermissionsAsync();
+      if (permission.status !== 'granted') {
+        Alert.alert(
+          "Permission Required",
+          "Please grant microphone permissions to record audio notes."
+        );
+        return;
+      }
+
+      // Configure audio mode
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      // Start recording
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+
+      setRecording(recording);
+      setIsRecording(true);
+      setAudioLength(0);
+
+      // Start timer
+      const startTime = Date.now();
+      const timer = setInterval(() => {
+        if (!isRecording) {
+          clearInterval(timer);
+          return;
+        }
+        setAudioLength(Math.floor((Date.now() - startTime) / 1000));
+      }, 1000);
+    } catch (error) {
+      console.error("Failed to start recording:", error);
+      Alert.alert("Error", "Failed to start recording. Please try again.");
+    }
+  };
+
+  const stopRecording = async () => {
+    if (!recording) return;
+
+    try {
+      setIsRecording(false);
+      await recording.stopAndUnloadAsync();
+      const uri = recording.getURI();
+      setAudioUri(uri);
+      setRecording(null);
+    } catch (error) {
+      console.error("Failed to stop recording:", error);
+      Alert.alert("Error", "Failed to stop recording. Please try again.");
+    }
+  };
+
+  const deleteAudio = () => {
+    setAudioUri(null);
+    setAudioLength(0);
   };
 
   const handleSave = async () => {
@@ -89,6 +156,26 @@ export default function CreateEntryScreen() {
       };
 
       const response = await apiService.createEntry(entryData);
+
+      // Upload audio if available
+      if (audioUri) {
+        try {
+          await apiService.uploadAudio(
+            response.entry.id,
+            audioUri,
+            audioLength
+          );
+        } catch (audioError) {
+          console.error("Failed to upload audio:", audioError);
+          // Don't fail the entire creation if audio upload fails
+          Alert.alert(
+            "Entry Saved",
+            "Your mood entry has been saved, but the audio upload failed. You can try adding audio later.",
+            [{ text: "OK", onPress: () => router.back() }]
+          );
+          return;
+        }
+      }
 
       Alert.alert(
         "Entry Saved",
@@ -288,25 +375,57 @@ export default function CreateEntryScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Voice Note</Text>
             <Text style={styles.sectionSubtitle}>
-              Record your thoughts (coming soon)
+              Record your thoughts (optional)
             </Text>
 
-            <TouchableOpacity
-              style={styles.voiceButton}
-              onPress={() =>
-                Alert.alert(
-                  "Coming Soon",
-                  "Voice recording feature will be available soon!"
-                )
-              }
-            >
-              <Ionicons
-                name="mic-outline"
-                size={24}
-                color={COLORS.textSecondary}
-              />
-              <Text style={styles.voiceButtonText}>Tap to record</Text>
-            </TouchableOpacity>
+            {!audioUri ? (
+              <TouchableOpacity
+                style={[
+                  styles.voiceButton,
+                  isRecording ? styles.voiceButtonRecording : null,
+                ]}
+                onPress={isRecording ? stopRecording : startRecording}
+              >
+                <Ionicons
+                  name={isRecording ? "stop" : "mic-outline"}
+                  size={24}
+                  color={isRecording ? COLORS.white : COLORS.primary}
+                />
+                <Text
+                  style={[
+                    styles.voiceButtonText,
+                    isRecording ? styles.voiceButtonTextRecording : null,
+                  ]}
+                >
+                  {isRecording
+                    ? `Recording... ${audioLength}s`
+                    : "Tap to record"}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.audioPreview}>
+                <View style={styles.audioPreviewContent}>
+                  <Ionicons
+                    name="musical-notes"
+                    size={20}
+                    color={COLORS.primary}
+                  />
+                  <Text style={styles.audioPreviewText}>
+                    Audio recorded ({audioLength}s)
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={deleteAudio}
+                  style={styles.deleteAudioButton}
+                >
+                  <Ionicons
+                    name="trash-outline"
+                    size={18}
+                    color={COLORS.error}
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -394,10 +513,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: SPACING.base,
     borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 2,
+    borderWidth: 0,
     backgroundColor: COLORS.white,
     width: "48%",
-    ...SHADOWS.sm,
+    // ...SHADOWS.sm,
   },
   moodOptionSelected: {
     borderWidth: 3,
@@ -407,8 +526,8 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xs,
   },
   moodLabel: {
-    fontSize: TYPOGRAPHY.fontSize.sm,
-    fontWeight: "600",
+    fontSize: 15,
+    // fontWeight: "600",
     color: COLORS.textPrimary,
   },
   moodLabelSelected: {
@@ -509,8 +628,39 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.gray[50],
     gap: SPACING.sm,
   },
+  voiceButtonRecording: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+    borderStyle: "solid",
+  },
   voiceButtonText: {
     fontSize: TYPOGRAPHY.fontSize.base,
     color: COLORS.textSecondary,
+  },
+  voiceButtonTextRecording: {
+    color: COLORS.white,
+  },
+  audioPreview: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: COLORS.primary + "10",
+    borderWidth: 1,
+    borderColor: COLORS.primary + "30",
+  },
+  audioPreviewContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.sm,
+  },
+  audioPreviewText: {
+    fontSize: TYPOGRAPHY.fontSize.base,
+    color: COLORS.primary,
+    fontWeight: "500",
+  },
+  deleteAudioButton: {
+    padding: SPACING.xs,
   },
 });

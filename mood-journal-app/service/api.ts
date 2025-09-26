@@ -3,7 +3,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { User, MoodEntry, AuthResponse, ApiError } from "../types/store";
 
 // Configure your backend URL here
-const API_BASE_URL = "http://192.168.1.110:8000";
+// Use 10.0.2.2 for Android emulator, 127.0.0.1 for iOS simulator
+const API_BASE_URL = "http://10.237.70.248:8000";
 
 class ApiService {
   private client: AxiosInstance;
@@ -67,6 +68,26 @@ class ApiService {
     } catch (error) {
       console.error("Error clearing auth from store:", error);
     }
+  }
+
+  // Get authentication token
+  async getAuthToken(): Promise<string | null> {
+    try {
+      const storeData = await AsyncStorage.getItem("mood-journal-store");
+      if (storeData) {
+        const parsedStore = JSON.parse(storeData);
+        return parsedStore.state?.token || null;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error getting auth token:", error);
+      return null;
+    }
+  }
+
+  // Get base URL for API endpoints
+  getBaseURL(): string {
+    return this.client.defaults.baseURL || "";
   }
 
   // Debug function to check token
@@ -198,7 +219,7 @@ class ApiService {
       formData.append("duration", duration.toString());
     }
 
-    const response = await this.client.post("/audio/upload", formData, {
+    const response = await this.client.post("/api/audio/upload", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },

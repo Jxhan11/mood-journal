@@ -160,4 +160,11 @@ def register_error_handlers(app):
 
 if __name__=='__main__':
     app = create_app()
+    
+    # Start background insight processor
+    with app.app_context():
+        from utils.insight_processor import start_insight_processor
+        start_insight_processor(app)
+        app.logger.info("Background insight processor started")
+    
     app.run(host='0.0.0.0',port=8000,debug=True)

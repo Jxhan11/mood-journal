@@ -145,9 +145,20 @@ export default function HistoryScreen() {
                 item.mood?.emotion.slice(1) || "Unknown"}
             </Text>
             <View style={styles.entryMeta}>
-              <Text style={styles.entryTime}>
-                {formatTime(item.entry_date)}
-              </Text>
+              <View style={styles.entryMetaLeft}>
+                <Text style={styles.entryTime}>
+                  {formatTime(item.entry_date)}
+                </Text>
+                {item.audio_file && (
+                  <View style={styles.audioIndicator}>
+                    <Ionicons
+                      name="musical-notes"
+                      size={12}
+                      color={COLORS.primary}
+                    />
+                  </View>
+                )}
+              </View>
               <View style={styles.moodIndicator}>
                 <View
                   style={[
@@ -388,8 +399,22 @@ const styles = StyleSheet.create({
   },
   entryMeta: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
     gap: SPACING.sm,
+  },
+  entryMetaLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.xs,
+  },
+  audioIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.primary + "20",
+    paddingHorizontal: SPACING.xs,
+    paddingVertical: 2,
+    borderRadius: BORDER_RADIUS.sm,
   },
   entryTime: {
     fontSize: TYPOGRAPHY.fontSize.sm,

@@ -59,7 +59,8 @@ class MoodEntry(Document):
             'ai_processed':self.ai_processed,
             'ai_processing_failed':self.ai_processing_failed,
             'ai_error_message':self.ai_error_message,
-            'ai_processed_at':self.ai_processed_at
+            'ai_processed_at':self.ai_processed_at,
+            'ai_insight':self.ai_insight
         }
         if self.audio_file:
             data['audio_file'] = self.audio_file.to_dict()
